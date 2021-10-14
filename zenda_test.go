@@ -6,403 +6,13 @@ import (
 	"testing"
 
 	"github.com/moov-io/iso8583"
-	"github.com/moov-io/iso8583/encoding"
-	"github.com/moov-io/iso8583/field"
-	"github.com/moov-io/iso8583/padding"
-	"github.com/moov-io/iso8583/prefix"
+	"github.com/moov-io/iso8583/specs"
+	"github.com/moov-io/iso8583/visa/field62"
 	"github.com/yerden/go-util/bcd"
 )
 
 func TestZendaISO(t *testing.T) {
 	fmt.Println("Welcome to zenda ISO test.")
-	spec := &iso8583.MessageSpec{
-		Fields: map[int]field.Field{
-			0: field.NewString(&field.Spec{
-				Length:      4,
-				Description: "Message Type Indicator",
-				Enc:         encoding.BCD,
-				Pref:        prefix.BCD.Fixed,
-			}),
-			1: field.NewBitmap(&field.Spec{
-				Description: "Bitmap",
-				Enc:         encoding.Binary,
-				Pref:        prefix.Binary.Fixed,
-			}),
-			2: field.NewString(&field.Spec{
-				Length:      11,
-				Description: "PAN",
-				Enc:         encoding.Binary,
-				Pref:        prefix.Binary.L,
-			}),
-			3: field.NewString(&field.Spec{
-				Length:      6,
-				Description: "Processing Code",
-				Enc:         encoding.BCD,
-				Pref:        prefix.BCD.Fixed,
-			}),
-			4: field.NewString(&field.Spec{
-				Length:      12,
-				Description: "Amount, Transaction",
-				Enc:         encoding.BCD,
-				Pref:        prefix.BCD.Fixed,
-			}),
-			5: field.NewString(&field.Spec{
-				Length:      12,
-				Description: "Amount, Settlement",
-				Enc:         encoding.BCD,
-				Pref:        prefix.BCD.Fixed,
-			}),
-			6: field.NewString(&field.Spec{
-				Length:      12,
-				Description: "Amount, Cardholder Billing",
-				Enc:         encoding.BCD,
-				Pref:        prefix.BCD.Fixed,
-			}),
-			7: field.NewString(&field.Spec{
-				Length:      10,
-				Description: "Transmission Date and Time",
-				Enc:         encoding.BCD,
-				Pref:        prefix.BCD.Fixed,
-			}),
-			8: field.NewString(&field.Spec{
-				Length:      8,
-				Description: "Amount, Cardholder Billing Fee",
-				Enc:         encoding.BCD,
-				Pref:        prefix.BCD.Fixed,
-			}),
-			9: field.NewString(&field.Spec{
-				Length:      8,
-				Description: "Conversion Rate, Settlement",
-				Enc:         encoding.BCD,
-				Pref:        prefix.BCD.Fixed,
-			}),
-			10: field.NewString(&field.Spec{
-				Length:      8,
-				Description: "Conversion Rate, Cardholder Billing",
-				Enc:         encoding.BCD,
-				Pref:        prefix.BCD.Fixed,
-			}),
-			11: field.NewString(&field.Spec{
-				Length:      6,
-				Description: "System Trace Audit Number",
-				Enc:         encoding.BCD,
-				Pref:        prefix.BCD.Fixed,
-			}),
-			12: field.NewString(&field.Spec{
-				Length:      6,
-				Description: "Time, Local Transaction",
-				Enc:         encoding.BCD,
-				Pref:        prefix.BCD.Fixed,
-			}),
-			13: field.NewString(&field.Spec{
-				Length:      4,
-				Description: "Date, Local Transaction",
-				Enc:         encoding.BCD,
-				Pref:        prefix.BCD.Fixed,
-			}),
-			14: field.NewString(&field.Spec{
-				Length:      4,
-				Description: "Date, Expiration",
-				Enc:         encoding.BCD,
-				Pref:        prefix.BCD.Fixed,
-			}),
-			15: field.NewString(&field.Spec{
-				Length:      4,
-				Description: "Date, Settlement",
-				Enc:         encoding.BCD,
-				Pref:        prefix.BCD.Fixed,
-			}),
-			16: field.NewString(&field.Spec{
-				Length:      4,
-				Description: "Date, Conversion",
-				Enc:         encoding.BCD,
-				Pref:        prefix.BCD.Fixed,
-			}),
-			17: field.NewString(&field.Spec{
-				Length:      4,
-				Description: "Date, Capture",
-				Enc:         encoding.Binary,
-				Pref:        prefix.Binary.Fixed,
-			}),
-			18: field.NewString(&field.Spec{
-				Length:      4,
-				Description: "Merchant Type",
-				Enc:         encoding.BCD,
-				Pref:        prefix.BCD.Fixed,
-			}),
-			19: field.NewString(&field.Spec{
-				Length:      3,
-				Description: "Acquiring Institution Country Code",
-				Enc:         encoding.BCD,
-				Pref:        prefix.BCD.Fixed,
-				Pad:         padding.Left('0'),
-			}),
-			20: field.NewString(&field.Spec{
-				Length:      3,
-				Description: "PAN Extended, Country Code",
-				Enc:         encoding.BCD,
-				Pref:        prefix.BCD.Fixed,
-				Pad:         padding.Left('0'),
-			}),
-			22: field.NewString(&field.Spec{
-				Length:      4,
-				Description: "Point-of-Service Entry Mode Code",
-				Enc:         encoding.BCD,
-				Pref:        prefix.BCD.Fixed,
-			}),
-			23: field.NewString(&field.Spec{
-				Length:      4,
-				Description: "Card Sequence Number",
-				Enc:         encoding.BCD,
-				Pref:        prefix.BCD.Fixed,
-			}),
-			24: field.NewString(&field.Spec{
-				Length:      4,
-				Description: "Network International Identifier",
-				Enc:         encoding.BCD,
-				Pref:        prefix.BCD.Fixed,
-				Pad:         padding.Left('0'),
-			}),
-			25: field.NewString(&field.Spec{
-				Length:      2,
-				Description: "POS Condition Code",
-				Enc:         encoding.BCD,
-				Pref:        prefix.BCD.Fixed,
-			}),
-			26: field.NewString(&field.Spec{
-				Length:      2,
-				Description: "POS PIN Capture Code",
-				Enc:         encoding.BCD,
-				Pref:        prefix.BCD.Fixed,
-			}),
-			28: field.NewString(&field.Spec{
-				Length:      9,
-				Description: "Amount, Transaction Fee",
-				Enc:         encoding.EBCDIC,
-				Pref:        prefix.EBCDIC.Fixed,
-			}),
-			32: field.NewString(&field.Spec{
-				Length:      11,
-				Description: "Acquiring Institution Identification Code",
-				Enc:         encoding.BCD,
-				Pref:        prefix.Binary.L,
-				Pad:         padding.Left('0'),
-			}),
-			33: field.NewString(&field.Spec{
-				Length:      11,
-				Description: "Forwarding Institution Identification Code",
-				Enc:         encoding.BCD,
-				Pref:        prefix.Binary.L,
-				Pad:         padding.Left('0'),
-			}),
-			34: field.NewString(&field.Spec{
-				Length:      15,
-				Description: "PAN, Extended",
-				Enc:         encoding.Binary,
-				Pref:        prefix.Binary.L,
-			}),
-			35: field.NewString(&field.Spec{
-				Length:      20,
-				Description: "Track 2 Data",
-				Enc:         encoding.Binary,
-				Pref:        prefix.Binary.L,
-			}),
-			36: field.NewString(&field.Spec{
-				Length:      53,
-				Description: "Track 3 Data",
-				Enc:         encoding.Binary,
-				Pref:        prefix.Binary.L,
-			}),
-			37: field.NewString(&field.Spec{
-				Length:      12,
-				Description: "Retrieval Reference Number",
-				Enc:         encoding.EBCDIC,
-				Pref:        prefix.EBCDIC.Fixed,
-			}),
-			38: field.NewString(&field.Spec{
-				Length:      6,
-				Description: "Authorization Identification Response",
-				Enc:         encoding.EBCDIC,
-				Pref:        prefix.EBCDIC.Fixed,
-			}),
-			39: field.NewString(&field.Spec{
-				Length:      2,
-				Description: "Response Code",
-				Enc:         encoding.EBCDIC,
-				Pref:        prefix.EBCDIC.Fixed,
-			}),
-			41: field.NewString(&field.Spec{
-				Length:      8,
-				Description: "Card Acceptor Terminal Identification",
-				Enc:         encoding.EBCDIC,
-				Pref:        prefix.EBCDIC.Fixed,
-			}),
-			42: field.NewString(&field.Spec{
-				Length:      15,
-				Description: "Card Acceptor Identification Code",
-				Enc:         encoding.EBCDIC,
-				Pref:        prefix.EBCDIC.Fixed,
-			}),
-			43: field.NewString(&field.Spec{
-				Length:      40,
-				Description: "Card Acceptor Name/Location",
-				Enc:         encoding.EBCDIC,
-				Pref:        prefix.EBCDIC.Fixed,
-			}),
-			44: field.NewString(&field.Spec{
-				Length:      26,
-				Description: "Additional Response Data",
-				Enc:         encoding.EBCDIC,
-				Pref:        prefix.Binary.L,
-			}),
-			45: field.NewString(&field.Spec{
-				Length:      77,
-				Description: "Track 1 Data",
-				Enc:         encoding.EBCDIC,
-				Pref:        prefix.Binary.L,
-			}),
-			46: field.NewString(&field.Spec{
-				Length:      256,
-				Description: "Amounts, Fees",
-				Enc:         encoding.Binary,
-				Pref:        prefix.Binary.L,
-			}),
-			47: field.NewString(&field.Spec{
-				Length:      256,
-				Description: "Additional Data—National",
-				Enc:         encoding.Binary,
-				Pref:        prefix.Binary.L,
-			}),
-			48: field.NewString(&field.Spec{
-				Length:      256,
-				Description: "Additional Data—Private",
-				Enc:         encoding.Binary,
-				Pref:        prefix.Binary.L,
-			}),
-			49: field.NewString(&field.Spec{
-				Length:      3,
-				Description: "Currency Code, Transaction",
-				Enc:         encoding.BCD,
-				Pref:        prefix.BCD.Fixed,
-				Pad:         padding.Left('0'),
-			}),
-			50: field.NewString(&field.Spec{
-				Length:      3,
-				Description: "Currency Code, Settlement",
-				Enc:         encoding.BCD,
-				Pref:        prefix.BCD.Fixed,
-				Pad:         padding.Left('0'),
-			}),
-			51: field.NewString(&field.Spec{
-				Length:      3,
-				Description: "Currency Code, Cardholder Billing",
-				Enc:         encoding.BCD,
-				Pref:        prefix.BCD.Fixed,
-				Pad:         padding.Left('0'),
-			}),
-			52: field.NewString(&field.Spec{
-				Length:      8,
-				Description: "Personal Identification Number (PIN) Data",
-				Enc:         encoding.Binary,
-				Pref:        prefix.Binary.Fixed,
-			}),
-			53: field.NewString(&field.Spec{
-				Length:      16,
-				Description: "Security-Related Control Information",
-				Enc:         encoding.BCD,
-				Pref:        prefix.BCD.Fixed,
-			}),
-			54: field.NewString(&field.Spec{
-				Length:      121,
-				Description: "Additional Amounts",
-				Enc:         encoding.Binary,
-				Pref:        prefix.Binary.L,
-			}),
-			55: field.NewString(&field.Spec{
-				Length:      256,
-				Description: "Integrated Circuit Card (ICC) Related Data",
-				Enc:         encoding.Binary,
-				Pref:        prefix.Binary.L,
-			}),
-			56: field.NewString(&field.Spec{
-				Length:      256,
-				Description: "Payment Account Reference Data",
-				Enc:         encoding.Binary,
-				Pref:        prefix.Binary.L,
-			}),
-			57: field.NewString(&field.Spec{
-				Length:      256,
-				Description: "Reserved Nationa",
-				Enc:         encoding.Binary,
-				Pref:        prefix.Binary.L,
-			}),
-			58: field.NewString(&field.Spec{
-				Length:      256,
-				Description: "Reserved National",
-				Enc:         encoding.Binary,
-				Pref:        prefix.Binary.L,
-			}),
-			59: field.NewString(&field.Spec{
-				Length:      15,
-				Description: "National Point-of-Service Geographic Data",
-				Enc:         encoding.EBCDIC,
-				Pref:        prefix.Binary.L,
-			}),
-			60: field.NewString(&field.Spec{
-				Length:      6,
-				Description: "Additional POS Information",
-				Enc:         encoding.Binary,
-				Pref:        prefix.Binary.L,
-			}),
-			61: field.NewString(&field.Spec{
-				Length:      19,
-				Description: "Other Amounts",
-				Enc:         encoding.Binary,
-				Pref:        prefix.Binary.L,
-			}),
-			62: field.NewString(&field.Spec{
-				Length:      256,
-				Description: "Custom Payment Service Fields Bitmap",
-				Enc:         encoding.Binary,
-				Pref:        prefix.Binary.L,
-			}),
-			// 62: field.NewComposite(&field.Spec{
-			// 	Length:      256,
-			// 	Description: "Custom Payment Service Fields Bitmap",
-			// 	Pref:        prefix.Binary.L,
-			// 	Tag: &field.TagSpec{
-			// 		Sort: sort.StringsByInt,
-			// 	},
-			// 	Subfields: map[string]field.Field{
-			// 		"0": field.NewBitmap(&field.Spec{
-			// 			Length:      8,
-			// 			Description: "Bitmap",
-			// 			Enc:         encoding.Binary,
-			// 			Pref:        prefix.Binary.Fixed,
-			// 		}),
-			// 		"1": field.NewString(&field.Spec{
-			// 			Length:      1,
-			// 			Description: "Authorization Characteristics Indicator",
-			// 			Enc:         encoding.EBCDIC,
-			// 			Pref:        prefix.EBCDIC.Fixed,
-			// 		}),
-			// 		"2": field.NewString(&field.Spec{
-			// 			Length:      15,
-			// 			Description: "Transaction Identifier",
-			// 			Enc:         encoding.BCD,
-			// 			Pref:        prefix.BCD.Fixed,
-			// 			Pad:         padding.Left('0'),
-			// 		}),
-			// 	},
-			// }),
-			63: field.NewString(&field.Spec{
-				Length:      256,
-				Description: "SMS Private-Use Fields",
-				Enc:         encoding.Binary,
-				Pref:        prefix.Binary.L,
-			}),
-		},
-	}
 	isoFromG := "FgECALwSNFYSNFYAAAAAAAAAAAAAAAIAMmBkgQjwgDYAAAAAAAAAEQAJIgcDQGEAAABJERZCIwhAAAAABldgI/Hy9vXw9/T58fHx9vn19/L18PP05vOZ46TCh6n2x5TYqdL15omVo4WZhoWTk0DCgYOSQNSBmZKFo0DT40DTwdLFQMPJ40BA5OPk4gVAQEBA8QhACvT58PDw+PTx8vEGAAAAAAAAEEAAAAAAAAAACVmDA4VJQjMFgAAAAAI="
 
 	rawISO, err := base64.StdEncoding.DecodeString(isoFromG)
@@ -412,15 +22,273 @@ func TestZendaISO(t *testing.T) {
 	fmt.Println("ISO Message from Galileo is: ", rawISO)
 	fmt.Println("Raw ISO without header is: ", rawISO[22:])
 
-	message := iso8583.NewMessage(spec)
+	message := iso8583.NewMessage(specs.Spec87Visa)
 	err = message.Unpack(rawISO[22:])
 	if err != nil {
 		fmt.Println(err)
 	}
 	f62bytes, _ := message.GetField(62).Bytes()
-	fmt.Println("Field 62:", f62bytes)
+	fmt.Println("Let's unpack Field 62 now!")
+	f62 := field62.NewField62(specs.Spec87VisaField62)
+	err = f62.Unpack(f62bytes)
+	if err != nil {
+		fmt.Println(err)
+	}
 }
 
+func TestZendaISO_CVS24(t *testing.T) {
+	fmt.Println("Welcome to zenda ISO test.")
+	isoFromG := "FgECAStJNSEAAAADEABCjBAYAwJaAAEANmZmgQjwojYAAAAAAAAABWQAAAAABWQQCSEzEGEAAAACAzUmEhAQWRIIQAUQAAAABkE3RvHy+PLx+fDy8PPz9vD18/bw8PH49PT09fD39/Dw+fXz9kBAw+XiYdfIwdnUwcPoQHvw+fXz9kBAQEDiwdVA2cHU1tVAQEBAw8Hk4gVAQEBA8ghACEBZAQBWnzMD4PjIlQWAgAiAAJ83BEYdfpOfEAcGARIDoDAAnyYI3PRuZte0iLOfNgIAAoICGACcAQCfGgIIQJoDIRAJnwIGAAAAAAVkXyoCCECEB6AAAACYCEAK8Pbw8PD59PX48wZFAAAQAAEX0AAQAAAAAADFBGEoJ3WQAJXVIAAQACAFgAAAAAI="
+
+	rawISO, err := base64.StdEncoding.DecodeString(isoFromG)
+	if err != nil {
+		fmt.Println(err)
+	}
+	fmt.Println("ISO Message from Galileo is: ", rawISO)
+	fmt.Println("Raw ISO without header is: ", rawISO[22:])
+
+	message := iso8583.NewMessage(specs.Spec87Visa)
+	err = message.Unpack(rawISO[22:])
+	if err != nil {
+		fmt.Println(err)
+	}
+	f62bytes, _ := message.GetField(62).Bytes()
+	fmt.Println("Let's unpack Field 62 now!")
+	f62 := field62.NewField62(specs.Spec87VisaField62)
+	err = f62.Unpack(f62bytes)
+	if err != nil {
+		fmt.Println(err)
+	}
+
+}
+
+func TestZendaISO_CVS24_Advice(t *testing.T) {
+	fmt.Println("Welcome to zenda ISO test.")
+	isoFromG := "FgECAUFJNQUAAAACEABAyRD/AgAAAAIgPvtkgQ5h4jYAAAAAAAAABWQAAAAABWQAAAAABWQQEAAAAGEAAABhAAAAAUF0AAAAEAkQEBAQWRIIQAUAAAZBN0bx8vjz8vnw8PHx8/fw9vH09/Pw8PT09PXw9/fw8Pn18/ZAQMPl4mHXyMHZ1MHD6EB78Pn18/ZAQEBA4sHVQNnB1NbVQEBAQMPB5OIJ5fFA8PDw8PDwCEAIQAhARwEARJ9uBEBAQECfMwPg+MiVBYCACIAAnzcERh1+k58mCMTDxvT2xfb2nzYCAAKCAhgAnAEAnxoCCECaAyEQCZ9bBUBAQEBACvD28PDw+fT1+PMEBQAAEB3ABhAAAAAAAOcEYSgndZAAlQAAAAAFZEAgABAAIBaVICAAApEB6UBAQEBAQBAGIyfR8/P2"
+
+	rawISO, err := base64.StdEncoding.DecodeString(isoFromG)
+	if err != nil {
+		fmt.Println(err)
+	}
+	fmt.Println("ISO Message from Galileo is: ", rawISO)
+	fmt.Println("Raw ISO without header is: ", rawISO[22:])
+
+	message := iso8583.NewMessage(specs.Spec87Visa)
+	err = message.Unpack(rawISO[22:])
+	if err != nil {
+		fmt.Println(err)
+	}
+	f62bytes, _ := message.GetField(62).Bytes()
+	fmt.Println("Let's unpack Field 62 now!")
+	f62 := field62.NewField62(specs.Spec87VisaField62)
+	err = f62.Unpack(f62bytes)
+	if err != nil {
+		fmt.Println(err)
+	}
+
+}
+
+func TestZendaISO_CVS25(t *testing.T) {
+	fmt.Println("Welcome to zenda ISO test.")
+	isoFromG := "FgECAStJNQkAAAADEABCjBAYAwGdAAEANmZmgQjwojYAAAAAAAAABFYAAAAABFYQCSE0JWEAAAACE1gmEhAQWRIIQAUQAAAABkE3RvHy+PLx9/Dy8fP1+fD18/bw8PH49PT09fD39/Dw+fXz9kBAw+XiYdfIwdnUwcPoQHvw+fXz9kBAQEDiwdVA2cHU1tVAQEBAw8Hk4gVAQEBA8ghACEBZAQBWnzMD4PjIlQWAgAiAAJ83BPq6OtWfEAcGARIDoLAAnyYI4ABcZeen0uyfNgIAA4ICGACcAQCfGgIIQJoDIRAJnwIGAAAAAARWXyoCCECEB6AAAACYCEAK8Pbw8PD59PX48wZFAAAQAAEX0AAQAAAAAADFBGEoJ3ZlYQHVIAAQACAFgAAAAAI="
+
+	rawISO, err := base64.StdEncoding.DecodeString(isoFromG)
+	if err != nil {
+		fmt.Println(err)
+	}
+	fmt.Println("ISO Message from Galileo is: ", rawISO)
+	fmt.Println("Raw ISO without header is: ", rawISO[22:])
+
+	message := iso8583.NewMessage(specs.Spec87Visa)
+	err = message.Unpack(rawISO[22:])
+	if err != nil {
+		fmt.Println(err)
+	}
+	f62bytes, _ := message.GetField(62).Bytes()
+	fmt.Println("Let's unpack Field 62 now!")
+	f62 := field62.NewField62(specs.Spec87VisaField62)
+	err = f62.Unpack(f62bytes)
+	if err != nil {
+		fmt.Println(err)
+	}
+}
+
+func TestZendaISO_CVS25_Advice(t *testing.T) {
+	fmt.Println("Welcome to zenda ISO test.")
+	isoFromG := "FgECAUFJNSMAAAACEABAyRD/AgAAAAIgPvtkgQ5h4jYAAAAAAAAABFYAAAAABFYAAAAABFYQEAAAAGEAAABhAAAAAUGCAAAAEAkQEBAQWRIIQAUAAAZBN0bx8vjz8vLw8PHx8/fw+PH19/Xw8PT09PXw9/fw8Pn18/ZAQMPl4mHXyMHZ1MHD6EB78Pn18/ZAQEBA4sHVQNnB1NbVQEBAQMPB5OIJ5fFA8PDw8PDwCEAIQAhARwEARJ9uBEBAQECfMwPg+MiVBYCACIAAnzcE+ro61Z8mCMXw8PD1w/b1nzYCAAOCAhgAnAEAnxoCCECaAyEQCZ9bBUBAQEBACvD28PDw+fT1+PMEBQAAEB3ABhAAAAAAAOcEYSgndmVhAQAAAAAEVkAgABAAIBaVICAAApEB6UBAQEBAQBAGIyfR8/P2"
+
+	rawISO, err := base64.StdEncoding.DecodeString(isoFromG)
+	if err != nil {
+		fmt.Println(err)
+	}
+	fmt.Println("ISO Message from Galileo is: ", rawISO)
+	fmt.Println("Raw ISO without header is: ", rawISO[22:])
+
+	message := iso8583.NewMessage(specs.Spec87Visa)
+	err = message.Unpack(rawISO[22:])
+	if err != nil {
+		fmt.Println(err)
+	}
+	f62bytes, _ := message.GetField(62).Bytes()
+	fmt.Println("Let's unpack Field 62 now!")
+	f62 := field62.NewField62(specs.Spec87VisaField62)
+	err = f62.Unpack(f62bytes)
+	if err != nil {
+		fmt.Println(err)
+	}
+}
+
+func TestZendaISO_WG26(t *testing.T) {
+	fmt.Println("Welcome to zenda ISO test.")
+	isoFromG := "FgECAStJNREAAAABEABCjBAYARAoAAEANmZmgQjwojYAAAAAAAAABBIAAAAABBIQCSFXMWEAAAAAmAYmEhAQWRIIQAUQAAAABkRFAPHy+PLx9vDw+fjw9/Dw+fDw8PLx9PT09fHw8PH28Pnw80BA5sHTx9nFxdXiQHvx9vD58EBAQEBAQEDiwdVA2cHU1tVAQEBAw8Hk4gVAQEBA8ghACEBZAQBWnzMD4EjIlQWAAAiAAJ83BLrRnnqfEAcGARIDoLAAnyYIDFR0+ueVu6efNgIABoICGACcAQCfGgIIQJoDIRAJnwIGAAAAAAQSXyoCCECEB6AAAACYCEAK8Pbw8PD59PX48gZFAAAQAAEX0AAQAAAAAADFAwEoJ5BRZmLVIAAYAAUFgAAAAAI="
+
+	rawISO, err := base64.StdEncoding.DecodeString(isoFromG)
+	if err != nil {
+		fmt.Println(err)
+	}
+	fmt.Println("ISO Message from Galileo is: ", rawISO)
+	fmt.Println("Raw ISO without header is: ", rawISO[22:])
+
+	message := iso8583.NewMessage(specs.Spec87Visa)
+	err = message.Unpack(rawISO[22:])
+	if err != nil {
+		fmt.Println(err)
+	}
+	f62bytes, _ := message.GetField(62).Bytes()
+	fmt.Println("Let's unpack Field 62 now!")
+	f62 := field62.NewField62(specs.Spec87VisaField62)
+	err = f62.Unpack(f62bytes)
+	if err != nil {
+		fmt.Println(err)
+	}
+
+}
+
+func TestZendaISO_WG26_Advice(t *testing.T) {
+	fmt.Println("Welcome to zenda ISO test.")
+	isoFromG := "FgECAUFJNQUAAAACEABAyRD/AgAAAAIgPvtkgQ5h4jYAAAAAAAAABBIAAAAABBIAAAAABBIQEAAAAGEAAABhAAAABWk2AAAAEAkQEBAQWRIIQAUAAAZERQDx8vjz8vTw8PD29fbw+PT59vLw8PT09PXx8PDx9vD58PNAQObB08fZxcXV4kB78fbw+fBAQEBAQEBA4sHVQNnB1NbVQEBAQMPB5OIJ5fFA8PDw8PDwCEAIQAhARwEARJ9uBEBAQECfMwPgSMiVBYAACIAAnzcEutGeep8mCPDD9fT39MbBnzYCAAaCAhgAnAEAnxoCCECaAyEQCZ9bBUBAQEBACvD28PDw+fT1+PIEBQAAEB3ABhAAAAAAAOcDASgnkFFmYgAAAAAEEkAgABgABRaVICAAApEB6UBAQEBAQBAAA5jw5dfX"
+
+	rawISO, err := base64.StdEncoding.DecodeString(isoFromG)
+	if err != nil {
+		fmt.Println(err)
+	}
+	fmt.Println("ISO Message from Galileo is: ", rawISO)
+	fmt.Println("Raw ISO without header is: ", rawISO[22:])
+
+	message := iso8583.NewMessage(specs.Spec87Visa)
+	err = message.Unpack(rawISO[22:])
+	if err != nil {
+		fmt.Println(err)
+	}
+	f62bytes, _ := message.GetField(62).Bytes()
+	fmt.Println("Let's unpack Field 62 now!")
+	f62 := field62.NewField62(specs.Spec87VisaField62)
+	err = f62.Unpack(f62bytes)
+	if err != nil {
+		fmt.Println(err)
+	}
+
+}
+
+func TestZendaISO_WG27(t *testing.T) {
+	fmt.Println("Welcome to zenda ISO test.")
+	isoFromG := "FgECAStJNSAAAAABEABCjBAYARAnAAEANmZmgQjwojYAAAAAAAAABgEAAAAABgEQCSFYEmEAAAABaVQmEhAQWRIIQAUQAAAABkRFAPHy+PLx9vDx9vn19fDw+fDw8PLx9PT09fHw8PH28Pnw80BA5sHTx9nFxdXiQHvx9vD58EBAQEBAQEDiwdVA2cHU1tVAQEBAw8Hk4gVAQEBA8ghACEBZAQBWnzMD4EjIlQWAAAiAAJ83BDu0xDSfEAcGARIDoCAAnyYIQWqAc/Bi3qyfNgIAB4ICGACcAQCfGgIIQJoDIRAJnwIGAAAAAAYBXyoCCECEB6AAAACYCEAK8Pbw8PD59PX48gZFAAAQAAEX0AAQAAAAAADFAwEoJ5CSJzLVIAAYAAUFgAAAAAI="
+
+	rawISO, err := base64.StdEncoding.DecodeString(isoFromG)
+	if err != nil {
+		fmt.Println(err)
+	}
+	fmt.Println("ISO Message from Galileo is: ", rawISO)
+	fmt.Println("Raw ISO without header is: ", rawISO[22:])
+
+	message := iso8583.NewMessage(specs.Spec87Visa)
+	err = message.Unpack(rawISO[22:])
+	if err != nil {
+		fmt.Println(err)
+	}
+	f62bytes, _ := message.GetField(62).Bytes()
+	fmt.Println("Let's unpack Field 62 now!")
+	f62 := field62.NewField62(specs.Spec87VisaField62)
+	err = f62.Unpack(f62bytes)
+	if err != nil {
+		fmt.Println(err)
+	}
+}
+
+func TestZendaISO_WG27_Advice(t *testing.T) {
+	fmt.Println("Welcome to zenda ISO test.")
+	isoFromG := "FgECAUFJNQQAAAACEABAyRD/AgAAAAIgPvtkgQ5h4jYAAAAAAAAABgEAAAAABgEAAAAABgEQEAAAAGEAAABhAAAABWlEAAAAEAkQEBAQWRIIQAUAAAZERQDx8vjz8vjw8PD29fbw+PDy8Pnw8PT09PXx8PDx9vD58PNAQObB08fZxcXV4kB78fbw+fBAQEBAQEBA4sHVQNnB1NbVQEBAQMPB5OIJ5fFA8PDw8PDwCEAIQAhARwEARJ9uBEBAQECfMwPgSMiVBYAACIAAnzcEO7TENJ8mCPTx9sH48PfznzYCAAeCAhgAnAEAnxoCCECaAyEQCZ9bBUBAQEBACvD28PDw+fT1+PIEBQAAEB3ABhAAAAAAAOcDASgnkJInMgAAAAAGAUAgABgABRaVICAAApEB6UBAQEBAQBAAA5jw5dfX"
+
+	rawISO, err := base64.StdEncoding.DecodeString(isoFromG)
+	if err != nil {
+		fmt.Println(err)
+	}
+	fmt.Println("ISO Message from Galileo is: ", rawISO)
+	fmt.Println("Raw ISO without header is: ", rawISO[22:])
+
+	message := iso8583.NewMessage(specs.Spec87Visa)
+	err = message.Unpack(rawISO[22:])
+	if err != nil {
+		fmt.Println(err)
+	}
+	f62bytes, _ := message.GetField(62).Bytes()
+	fmt.Println("Let's unpack Field 62 now!")
+	f62 := field62.NewField62(specs.Spec87VisaField62)
+	err = f62.Unpack(f62bytes)
+	if err != nil {
+		fmt.Println(err)
+	}
+}
+
+func TestZendaISO_WG28(t *testing.T) {
+	fmt.Println("Welcome to zenda ISO test.")
+	isoFromG := "FgECAStJNQgAAAADEABCjBAYAwLCAAEANmZmgQjwojYAAAAAAAAAAnEAAAAAAnEQCSFYRGEAAAACIREmEhAQWRIIQAUQAAAABkRFAPHy+PLx9vDy8vHx8vDw+fDw8PLx9PT09fHw8PH28Pnw80BA5sHTx9nFxdXiQHvx9vD58EBAQEBAQEDiwdVA2cHU1tVAQEBAw8Hk4gVAQEBA8ghACEBZAQBWnzMD4EjIlQWAAAiAAJ83BO0XMEWfEAcGARIDoCAAnyYIMOppOzUaolefNgIACIICGACcAQCfGgIIQJoDIRAJnwIGAAAAAAJxXyoCCECEB6AAAACYCEAK8Pbw8PD59PX48gZFAAAQAAEX0AAQAAAAAADFBGEoJ5EkiJjVIAAYAAUFgAAAAAI="
+
+	rawISO, err := base64.StdEncoding.DecodeString(isoFromG)
+	if err != nil {
+		fmt.Println(err)
+	}
+	fmt.Println("ISO Message from Galileo is: ", rawISO)
+	fmt.Println("Raw ISO without header is: ", rawISO[22:])
+
+	message := iso8583.NewMessage(specs.Spec87Visa)
+	err = message.Unpack(rawISO[22:])
+	if err != nil {
+		fmt.Println(err)
+	}
+	f62bytes, _ := message.GetField(62).Bytes()
+	fmt.Println("Let's unpack Field 62 now!")
+	f62 := field62.NewField62(specs.Spec87VisaField62)
+	err = f62.Unpack(f62bytes)
+	if err != nil {
+		fmt.Println(err)
+	}
+}
+
+func TestZendaISO_WG28_Advice(t *testing.T) {
+	fmt.Println("Welcome to zenda ISO test.")
+	isoFromG := "FgECAUFJNQMAAAACEABAyRD/AgAAAAIgPvtkgQ5h4jYAAAAAAAAAAnEAAAAAAnEAAAAAAnEQEAAAAGEAAABhAAAABWlRAAAAEAkQEBAQWRIIQAUAAAZERQDx8vjz8vPw8PD29fbw8/j19fXw8PT09PXx8PDx9vD58PNAQObB08fZxcXV4kB78fbw+fBAQEBAQEBA4sHVQNnB1NbVQEBAQMPB5OIJ5fFA8PDw8PDwCEAIQAhARwEARJ9uBEBAQECfMwPgSMiVBYAACIAAnzcE7RcwRZ8mCPPwxcH2+fPCnzYCAAiCAhgAnAEAnxoCCECaAyEQCZ9bBUBAQEBACvD28PDw+fT1+PIEBQAAEB3ABhAAAAAAAOcEYSgnkSSImAAAAAACcUAgABgABRaVICAAApEB6UBAQEBAQBAAA5jw5dfX"
+
+	rawISO, err := base64.StdEncoding.DecodeString(isoFromG)
+	if err != nil {
+		fmt.Println(err)
+	}
+	fmt.Println("ISO Message from Galileo is: ", rawISO)
+	fmt.Println("Raw ISO without header is: ", rawISO[22:])
+
+	message := iso8583.NewMessage(specs.Spec87Visa)
+	err = message.Unpack(rawISO[22:])
+	if err != nil {
+		fmt.Println(err)
+	}
+	f62bytes, _ := message.GetField(62).Bytes()
+	fmt.Println("Let's unpack Field 62 now!")
+	f62 := field62.NewField62(specs.Spec87VisaField62)
+	err = f62.Unpack(f62bytes)
+	if err != nil {
+		fmt.Println(err)
+	}
+}
 func TestDecodeBCD(t *testing.T) {
 	fmt.Println("let's test BCD decoding.")
 	dec := bcd.NewDecoder(bcd.Standard)
