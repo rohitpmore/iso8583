@@ -189,10 +189,6 @@ func (m *Message) Unpack(src []byte) error {
 	}
 	m.fieldsMap[mtiIdx] = struct{}{}
 
-	fmt.Println("MTI is read: ", read)
-	mti, _ := m.fields[mtiIdx].String()
-	fmt.Println("MTI is: ", mti)
-
 	off = read
 
 	// unpack Bitmap
@@ -222,9 +218,9 @@ func (m *Message) Unpack(src []byte) error {
 				return fmt.Errorf("failed to unpack field %d (%s): %w", i, fl.Spec().Description, err)
 			}
 
-			flValue, _ := fl.String()
-			flBytes, _ := fl.Bytes()
-			fmt.Printf("Field %v - %v - %v - %v\n", i, fl.Spec().Description, flValue, flBytes)
+			// flValue, _ := fl.String()
+			// flBytes, _ := fl.Bytes()
+			// fmt.Printf("Field %v - %v - %v - %v\n", i, fl.Spec().Description, flValue, flBytes)
 
 			off += read
 		}

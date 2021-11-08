@@ -26,6 +26,8 @@ type Field54 struct {
 	fields map[int]field.Field
 	// tracks which fields were set
 	fieldsMap map[int]struct{}
+
+	Amounts map[string]float64
 }
 
 func NewField54(spec *Field54Spec) *Field54 {
@@ -35,6 +37,7 @@ func NewField54(spec *Field54Spec) *Field54 {
 		fields:    fields,
 		spec:      spec,
 		fieldsMap: map[int]struct{}{},
+		Amounts:   map[string]float64{},
 	}
 }
 
@@ -139,51 +142,38 @@ func (m *Field54) Pack() ([]byte, error) {
 func (m *Field54) Unpack(src []byte) error {
 	var off int
 
-	m.fieldsMap = map[int]struct{}{}
-
-	// unpack MTI
-	if m.dataValue != nil {
-		if err := m.setUnpackableDataField(0); err != nil {
-			return err
-		}
-	}
-
 	off = 0
 
-	// unpack Bitmap
-	read, err := m.fields[bitmapIdx].Unpack(src[off:])
-	if err != nil {
-		return fmt.Errorf("failed to unpack bitmap: %w", err)
+	for off < len(src) {
+		for i := 1; i <= 5; i++ {
+			fl, ok := m.fields[i]
+			if !ok {
+				return fmt.Errorf("failed to unpack field %d: no specification found", i)
+			}
+
+			if m.dataValue != nil {
+				if err := m.setUnpackableDataField(i); err != nil {
+					return err
+				}
+			}
+
+			m.fieldsMap[i] = struct{}{}
+			read, err := fl.Unpack(src[off:])
+			if err != nil {
+				return fmt.Errorf("failed to unpack field %d (%s): %w", i, fl.Spec().Description, err)
+			}
+
+			// flValue, _ := fl.String()
+			// flBytes, _ := fl.Bytes()
+			// fmt.Printf("Field 54.%v - %v - %v - %v\n", i, fl.Spec().Description, flValue, flBytes)
+			off += read
+
+		}
+		key, _ := m.fields[2].String()
+		val, _ := m.fields[5].String()
+		valFl, _ := strconv.ParseFloat(val, 64)
+		m.Amounts[key] = valFl / 100
 	}
-
-	off += read
-
-	// for i := 1; i <= m.Bitmap().Len(); i++ {
-	// 	if m.Bitmap().IsSet(i) {
-	// 		fl, ok := m.fields[i]
-	// 		if !ok {
-	// 			return fmt.Errorf("failed to unpack field %d: no specification found", i)
-	// 		}
-
-	// 		if m.dataValue != nil {
-	// 			if err := m.setUnpackableDataField(i); err != nil {
-	// 				return err
-	// 			}
-	// 		}
-
-	// 		m.fieldsMap[i] = struct{}{}
-	// 		read, err = fl.Unpack(src[off:])
-	// 		if err != nil {
-	// 			return fmt.Errorf("failed to unpack field %d (%s): %w", i, fl.Spec().Description, err)
-	// 		}
-
-	// 		flValue, _ := fl.String()
-	// 		flBytes, _ := fl.Bytes()
-	// 		fmt.Printf("Field 54.%v - %v - %v - %v\n", i, fl.Spec().Description, flValue, flBytes)
-
-	// 		off += read
-	// 	}
-	// }
 
 	return nil
 }

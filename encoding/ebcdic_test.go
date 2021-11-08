@@ -36,3 +36,21 @@ func TestMSDI(t *testing.T) {
 
 	})
 }
+
+func TestField54_WG_70067(t *testing.T) {
+	t.Run("Decode", func(t *testing.T) {
+		res, read, err := EBCDIC.Decode([]byte{0b11110000, 0b11110000}, 2)
+		fmt.Println("Account Type: ", string(res))
+		res, read, err = EBCDIC.Decode([]byte{0b11110100, 0b11100010}, 2)
+		fmt.Println("Amount Type: ", string(res))
+		res, read, err = EBCDIC.Decode([]byte{0b11111000, 0b11110100, 0b11110000}, 3)
+		fmt.Println("Currency Code: ", string(res))
+		res, read, err = EBCDIC.Decode([]byte{0b11000011}, 1)
+		fmt.Println("Amount Sign: ", string(res))
+		res, read, err = EBCDIC.Decode([]byte{0b11110000, 0b11110000, 0b11110000, 0b11110000, 0b11110000, 0b11110000, 0b11110000, 0b11110000, 0b11110000, 0b11110100, 0b11110001, 0b11110010}, 12)
+		fmt.Println("Amount: ", string(res))
+
+		require.NoError(t, err)
+		require.Equal(t, 1, read)
+	})
+}

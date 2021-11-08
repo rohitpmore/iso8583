@@ -202,9 +202,9 @@ func (m *Field62) Unpack(src []byte) error {
 				return fmt.Errorf("failed to unpack field %d (%s): %w", i, fl.Spec().Description, err)
 			}
 
-			flValue, _ := fl.String()
-			flBytes, _ := fl.Bytes()
-			fmt.Printf("Field 62.%v - %v - %v - %v\n", i, fl.Spec().Description, flValue, flBytes)
+			// flValue, _ := fl.String()
+			// flBytes, _ := fl.Bytes()
+			// fmt.Printf("Field 62.%v - %v - %v - %v\n", i, fl.Spec().Description, flValue, flBytes)
 
 			off += read
 		}
