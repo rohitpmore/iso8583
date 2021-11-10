@@ -37,6 +37,31 @@ func TestZendaISO(t *testing.T) {
 	}
 }
 
+func TestZendaMCISO(t *testing.T) {
+	fmt.Println("Welcome to Zenda MC ISO test.")
+	isoFromG := "8PLw8D77RgGI4eIK8PDw8PDw8PDw8PDw8PDw9PX28PDw8PDw8PDw9PX28PDw8PDw8PDw9PX28fHw9/H38fL08Pbx8PDw8PDw9vHw8PDw8PD39fn5+PXw+fHy8/jx8fD38fHw+PHx8Pb1+fHy8PXx8PDw8Pn49PDw9PTy9/Hx8Pnw8PDw8PD18Pbx8fD38Pnx8vL49PPz8Pn18/bx+PD39/Dw+fXz9kBAQEBAQMPl4mHXyMHZ1EDw+fXz9mBg9PnwQNRA4oGVQNmBlJaVQEBAQEBAw8Hw8fDZ9vHw9fHw8PDw+PTw+PTw+PTw8fH2nwIGAAAAAARWnyYIRTBvIJuez6aCAhgAnzYCAEGfJwGAnxAHBgESA6CgAJUFgIAEgABfKgIIQJoDIREHnAEAnzcEi8CGp58JApYAnzQDQgAAhAegAAAAmAhAnx4IODQyODYwNTefMwPg+MifNQEinxoCCEDw8vbw8PDw8PDw8PDw8/Dw+PTw+fT1+PNAQEBAQPDx8tTi8PL38/j2+fn0+A=="
+
+	rawISO, err := base64.StdEncoding.DecodeString(isoFromG)
+	if err != nil {
+		fmt.Println(err)
+	}
+	fmt.Println("ISO Message from Galileo is: ", rawISO)
+	// fmt.Println("Raw ISO without header is: ", rawISO[22:])
+
+	message := iso8583.NewMessage(specs.Spec87Maestro)
+	err = message.Unpack(rawISO)
+	if err != nil {
+		fmt.Println(err)
+	}
+	// f62bytes, _ := message.GetField(62).Bytes()
+	// fmt.Println("Let's unpack Field 62 now!")
+	// f62 := field62.NewField62(specs.Spec87VisaField62)
+	// err = f62.Unpack(f62bytes)
+	// if err != nil {
+	// 	fmt.Println(err)
+	// }
+}
+
 func TestZendaISO_CVS24(t *testing.T) {
 	fmt.Println("Welcome to zenda ISO test.")
 	isoFromG := "FgECAStJNSEAAAADEABCjBAYAwJaAAEANmZmgQjwojYAAAAAAAAABWQAAAAABWQQCSEzEGEAAAACAzUmEhAQWRIIQAUQAAAABkE3RvHy+PLx+fDy8PPz9vD18/bw8PH49PT09fD39/Dw+fXz9kBAw+XiYdfIwdnUwcPoQHvw+fXz9kBAQEDiwdVA2cHU1tVAQEBAw8Hk4gVAQEBA8ghACEBZAQBWnzMD4PjIlQWAgAiAAJ83BEYdfpOfEAcGARIDoDAAnyYI3PRuZte0iLOfNgIAAoICGACcAQCfGgIIQJoDIRAJnwIGAAAAAAVkXyoCCECEB6AAAACYCEAK8Pbw8PD59PX48wZFAAAQAAEX0AAQAAAAAADFBGEoJ3WQAJXVIAAQACAFgAAAAAI="
@@ -505,9 +530,9 @@ func TestZendaISO_WG_70067_Auth(t *testing.T) {
 
 }
 
-func TestZendaISO_WG_70068_Auth(t *testing.T) {
+func TestZendaISO_WG_70094_Auth(t *testing.T) {
 	fmt.Println("Welcome to zenda ISO test.")
-	isoFromG := "FgECAUBJNQgAAAACEABCjBAUAr4+AAEANmZmgQjwpjYAAAAAAAAABSEAAAAABSERBRlDJGEAAAACAzEmEhEGWRIIQAUQAAAABkRFAPHz8Pnx9vDy8PPz8vDw+fDw8PLx9PT09fHw8PH28Pnw80BA5sHTx9nFxdXiQHvx9vD58EBAQEBAQEDiwdVA2cHU1tVAQEBAw8Hk4gVAQEBA8ghACEAU8PD04vj08MPw8PDw8PDw8PD08fJZAQBWnzMD4EjIlQWAAAiAAJ83BAsrxYafEAcGARIDoCAAnyYIhKq8tWZGa6afNgIAPoICGACcAQCfGgIIQJoDIREFnwIGAAAAAAUhXyoCCECEB6AAAACYCEAK8Pbw8PD59PX48gZFAAAQAAEX0AAQAAAAAADFA4EwlxAEA1nUIAAYAAUFgAAAAAI="
+	isoFromG := "FgECAThJNQgAAAABEABCjBAeAQZPAAEANn5mgQjwojYAAAAAAAAABogAAAAABogRCQFUEWEAAACRUocXVAARCCYREQlUEQhABRAAAAAGQjFo8fPx8vDx+fH18vj3+fn5+fn5+fnw8PD09fnz+flAQEBAQEDiwcbF5sHoQHvw+fH5QEBAQEBAQEBAQOLB2cHj1sfBQEBAQEDDweTiBUBAQEDyCEAIQGIBAF+fMwPg+MiVBYAACIAAnzcE46/CGZ8QBwYBEgOgoACfJgiKn531WgzQfZ82AgALggIYAJwBAJ8aAghAmgMhEQifAgYAAAAABohfKgIIQJ8DBgAAAAAAAIQHoAAAAJgIQArw9vDw8Pn18PfwBnUAABAAARbAABAAAAAAAMUDATEwaFGQJyAAFgAABYAAAAAC"
 
 	rawISO, err := base64.StdEncoding.DecodeString(isoFromG)
 	if err != nil {

@@ -187,6 +187,8 @@ func (m *Message) Unpack(src []byte) error {
 	if err != nil {
 		return fmt.Errorf("failed to unpack MTI: %w", err)
 	}
+	mti, _ := m.fields[mtiIdx].String()
+	fmt.Println("MTI is: ", mti)
 	m.fieldsMap[mtiIdx] = struct{}{}
 
 	off = read
@@ -218,9 +220,9 @@ func (m *Message) Unpack(src []byte) error {
 				return fmt.Errorf("failed to unpack field %d (%s): %w", i, fl.Spec().Description, err)
 			}
 
-			// flValue, _ := fl.String()
-			// flBytes, _ := fl.Bytes()
-			// fmt.Printf("Field %v - %v - %v - %v\n", i, fl.Spec().Description, flValue, flBytes)
+			flValue, _ := fl.String()
+			flBytes, _ := fl.Bytes()
+			fmt.Printf("Field %v - %v - %v - %v\n", i, fl.Spec().Description, flValue, flBytes)
 
 			off += read
 		}
