@@ -1,4 +1,4 @@
-package iso8583
+package field48
 
 import (
 	"encoding/json"
@@ -7,22 +7,21 @@ import (
 	"sort"
 	"strconv"
 
+	"github.com/moov-io/iso8583/encoding"
 	"github.com/moov-io/iso8583/field"
 )
 
-var _ json.Marshaler = (*Message)(nil)
-var _ json.Unmarshaler = (*Message)(nil)
+var _ json.Marshaler = (*Field48)(nil)
+var _ json.Unmarshaler = (*Field48)(nil)
 
 const (
-	mtiIdx    = 0
-	bitmapIdx = 1
+	bitmapIdx = 0
 )
 
-type Message struct {
-	spec      *MessageSpec
+type Field48 struct {
+	spec      *Field48Spec
 	data      interface{}
 	dataValue *reflect.Value
-	bitmap    *field.Bitmap
 
 	// stores all fields according to the spec
 	fields map[int]field.Field
@@ -30,21 +29,21 @@ type Message struct {
 	fieldsMap map[int]struct{}
 }
 
-func NewMessage(spec *MessageSpec) *Message {
-	fields := spec.CreateMessageFields()
+func NewField48(spec *Field48Spec) *Field48 {
+	fields := spec.CreateField62Fields()
 
-	return &Message{
+	return &Field48{
 		fields:    fields,
 		spec:      spec,
 		fieldsMap: map[int]struct{}{},
 	}
 }
 
-func (m *Message) Data() interface{} {
+func (m *Field48) Data() interface{} {
 	return m.data
 }
 
-func (m *Message) SetData(data interface{}) error {
+func (m *Field48) SetData(data interface{}) error {
 	m.data = data
 
 	if m.data == nil {
@@ -65,28 +64,11 @@ func (m *Message) SetData(data interface{}) error {
 	return nil
 }
 
-func (m *Message) Bitmap() *field.Bitmap {
-	if m.bitmap != nil {
-		return m.bitmap
-	}
-
-	m.bitmap = m.fields[bitmapIdx].(*field.Bitmap)
-	m.bitmap.Reset()
-	m.fieldsMap[bitmapIdx] = struct{}{}
-
-	return m.bitmap
-}
-
-func (m *Message) MTI(val string) {
-	m.fieldsMap[mtiIdx] = struct{}{}
-	m.fields[mtiIdx].SetBytes([]byte(val))
-}
-
-func (m *Message) GetSpec() *MessageSpec {
+func (m *Field48) GetSpec() *Field48Spec {
 	return m.spec
 }
 
-func (m *Message) Field(id int, val string) error {
+func (m *Field48) Field(id int, val string) error {
 	if f, ok := m.fields[id]; ok {
 		m.fieldsMap[id] = struct{}{}
 		return f.SetBytes([]byte(val))
@@ -94,7 +76,7 @@ func (m *Message) Field(id int, val string) error {
 	return fmt.Errorf("failed to set field %d. ID does not exist", id)
 }
 
-func (m *Message) BinaryField(id int, val []byte) error {
+func (m *Field48) BinaryField(id int, val []byte) error {
 	if f, ok := m.fields[id]; ok {
 		m.fieldsMap[id] = struct{}{}
 		return f.SetBytes(val)
@@ -102,12 +84,7 @@ func (m *Message) BinaryField(id int, val []byte) error {
 	return fmt.Errorf("failed to set binary field %d. ID does not exist", id)
 }
 
-func (m *Message) GetMTI() (string, error) {
-	// check index
-	return m.fields[mtiIdx].String()
-}
-
-func (m *Message) GetString(id int) (string, error) {
+func (m *Field48) GetString(id int) (string, error) {
 	if f, ok := m.fields[id]; ok {
 		m.fieldsMap[id] = struct{}{}
 		return f.String()
@@ -115,7 +92,7 @@ func (m *Message) GetString(id int) (string, error) {
 	return "", fmt.Errorf("failed to get string for field %d. ID does not exist", id)
 }
 
-func (m *Message) GetBytes(id int) ([]byte, error) {
+func (m *Field48) GetBytes(id int) ([]byte, error) {
 	if f, ok := m.fields[id]; ok {
 		m.fieldsMap[id] = struct{}{}
 		return f.Bytes()
@@ -123,12 +100,12 @@ func (m *Message) GetBytes(id int) ([]byte, error) {
 	return nil, fmt.Errorf("failed to get bytes for field %d. ID does not exist", id)
 }
 
-func (m *Message) GetField(id int) field.Field {
+func (m *Field48) GetField(id int) field.Field {
 	return m.fields[id]
 }
 
 // Fields returns the map of the set fields
-func (m *Message) GetFields() map[int]field.Field {
+func (m *Field48) GetFields() map[int]field.Field {
 	fields := map[int]field.Field{}
 	for i := range m.fieldsMap {
 		fields[i] = m.GetField(i)
@@ -136,9 +113,8 @@ func (m *Message) GetFields() map[int]field.Field {
 	return fields
 }
 
-func (m *Message) Pack() ([]byte, error) {
+func (m *Field48) Pack() ([]byte, error) {
 	packed := []byte{}
-	m.Bitmap().Reset()
 
 	ids, err := m.setPackableDataFields()
 	if err != nil {
@@ -146,12 +122,11 @@ func (m *Message) Pack() ([]byte, error) {
 	}
 
 	for _, id := range ids {
-		// indexes 0 and 1 are for mti and bitmap
-		// regular field number startd from index 2
-		if id < 2 {
+		// indexes 0 is for bitmap
+		// regular field number startd from index 1
+		if id < 1 {
 			continue
 		}
-		m.Bitmap().Set(id)
 	}
 
 	// pack fields
@@ -170,68 +145,88 @@ func (m *Message) Pack() ([]byte, error) {
 	return packed, nil
 }
 
-func (m *Message) Unpack(src []byte) error {
+func (m *Field48) Unpack(src []byte) error {
 	var off int
 
 	m.fieldsMap = map[int]struct{}{}
 	// This method implicitly also sets m.fieldsMap[bitmapIdx]
-	m.Bitmap().Reset()
 
-	// unpack MTI
+	off = 0
+
+	//unpack TCC
+	fl, ok := m.fields[1]
+	if !ok {
+		return fmt.Errorf("failed to unpack field %d: no specification found", 1)
+	}
+
 	if m.dataValue != nil {
-		if err := m.setUnpackableDataField(0); err != nil {
+		if err := m.setUnpackableDataField(1); err != nil {
 			return err
 		}
 	}
-	read, err := m.fields[mtiIdx].Unpack(src)
-	if err != nil {
-		return fmt.Errorf("failed to unpack MTI: %w", err)
-	}
-	mti, _ := m.fields[mtiIdx].String()
-	fmt.Println("MTI is: ", mti)
-	m.fieldsMap[mtiIdx] = struct{}{}
 
-	off = read
-
-	// unpack Bitmap
-	read, err = m.fields[bitmapIdx].Unpack(src[off:])
+	m.fieldsMap[1] = struct{}{}
+	read, err := fl.Unpack(src[off : off+1])
 	if err != nil {
-		return fmt.Errorf("failed to unpack bitmap: %w", err)
+		return fmt.Errorf("failed to unpack field %d (%s): %w", 1, fl.Spec().Description, err)
 	}
 
 	off += read
 
-	for i := 2; i <= m.Bitmap().Len(); i++ {
-		if m.Bitmap().IsSet(i) {
-			fl, ok := m.fields[i]
-			if !ok {
-				return fmt.Errorf("failed to unpack field %d: no specification found", i)
-			}
-
-			if m.dataValue != nil {
-				if err := m.setUnpackableDataField(i); err != nil {
-					return err
-				}
-			}
-
-			m.fieldsMap[i] = struct{}{}
-			read, err = fl.Unpack(src[off:])
-			if err != nil {
-				return fmt.Errorf("failed to unpack field %d (%s): %w", i, fl.Spec().Description, err)
-			}
-
-			flValue, _ := fl.String()
-			flBytes, _ := fl.Bytes()
-			fmt.Printf("Field %v -  %v - %v - %v - %v\n", i, fl.Spec().Description, src[off:off+read], flValue, flBytes)
-
-			off += read
+	for off < len(src) {
+		tagData := src[off : off+2]
+		tag, _, err := encoding.EBCDIC.Decode(tagData, 2)
+		if err != nil {
+			fmt.Println("EBCDID Decode fail")
+			return fmt.Errorf("failed to decode tag of sub-field")
 		}
+		tagInt, err := strconv.ParseInt(string(tag), 10, 64)
+		if err != nil {
+			fmt.Println("STRconv fail")
+			return fmt.Errorf("failed to decode tag of sub-field")
+		}
+
+		off += 2
+
+		// lenData := src[off : off+2]
+		// len, _, err := encoding.EBCDIC.Decode(lenData, 2)
+		// if err != nil {
+		// 	return fmt.Errorf("failed to decode len of sub-field")
+		// }
+		// lenInt, err := strconv.ParseInt(string(len), 10, 64)
+		// if err != nil {
+		// 	return fmt.Errorf("failed to decode len of sub-field")
+		// }
+
+		// off += 2
+
+		fl, ok := m.fields[int(tagInt)]
+		if !ok {
+			return fmt.Errorf("failed to unpack field %d: no specification found", tagInt)
+		}
+
+		if m.dataValue != nil {
+			if err := m.setUnpackableDataField(int(tagInt)); err != nil {
+				return err
+			}
+		}
+
+		m.fieldsMap[int(tagInt)] = struct{}{}
+		read, err := fl.Unpack(src[off:])
+		if err != nil {
+			return fmt.Errorf("failed to unpack field %d (%s): %w", tagInt, fl.Spec().Description, err)
+		}
+
+		off += read
+
+		flValue, _ := fl.String()
+		fmt.Printf("Field 48.%v - %v - %v\n", tagInt, fl.Spec().Description, flValue)
 	}
 
 	return nil
 }
 
-func (m *Message) MarshalJSON() ([]byte, error) {
+func (m *Field48) MarshalJSON() ([]byte, error) {
 	// by packing the message we will generate bitmap
 	// create HEX representation
 	// and validate message against the spec
@@ -255,7 +250,7 @@ func (m *Message) MarshalJSON() ([]byte, error) {
 	return json.Marshal(field.OrderedMap(strFieldMap))
 }
 
-func (m *Message) UnmarshalJSON(b []byte) error {
+func (m *Field48) UnmarshalJSON(b []byte) error {
 	var data map[string]json.RawMessage
 	json.Unmarshal(b, &data)
 
@@ -285,10 +280,10 @@ func (m *Message) UnmarshalJSON(b []byte) error {
 	return nil
 }
 
-func (m *Message) setPackableDataFields() ([]int, error) {
-	// Index 0 and 1 represent the MTI and bitmap respectively.
-	// These fields are assumed to be always populated.
-	populatedFieldIDs := []int{0, 1}
+func (m *Field48) setPackableDataFields() ([]int, error) {
+	// Index  1 represent bitmap.
+	// It is assumed to be always populated.
+	populatedFieldIDs := []int{1}
 
 	for id, field := range m.fields {
 		// represents the bitmap
@@ -324,7 +319,7 @@ func (m *Message) setPackableDataFields() ([]int, error) {
 	return populatedFieldIDs, nil
 }
 
-func (m *Message) setUnpackableDataField(id int) error {
+func (m *Field48) setUnpackableDataField(id int) error {
 	specField, ok := m.fields[id]
 	if !ok {
 		return fmt.Errorf("failed to unpack field %d: no specification found", id)
@@ -347,6 +342,6 @@ func (m *Message) setUnpackableDataField(id int) error {
 	return nil
 }
 
-func (m *Message) dataFieldValue(id int) reflect.Value {
+func (m *Field48) dataFieldValue(id int) reflect.Value {
 	return m.dataValue.FieldByName(fmt.Sprintf("F%d", id))
 }

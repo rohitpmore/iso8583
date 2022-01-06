@@ -37,6 +37,16 @@ func TestMSDI(t *testing.T) {
 	})
 }
 
+func TestMC_F48(t *testing.T) {
+	t.Run("Decode", func(t *testing.T) {
+		res, read, err := EBCDIC.Decode([]byte{0b00110110, 0b00110001}, 2)
+		fmt.Println("F48.61 : ", string(res))
+
+		require.NoError(t, err)
+		require.Equal(t, 2, read)
+
+	})
+}
 func TestField54_WG_70067(t *testing.T) {
 	t.Run("Decode", func(t *testing.T) {
 		res, read, err := EBCDIC.Decode([]byte{0b11110000, 0b11110000}, 2)
