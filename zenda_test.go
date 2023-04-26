@@ -10,6 +10,7 @@ import (
 	"github.com/moov-io/iso8583/encoding"
 	"github.com/moov-io/iso8583/mastercard/field48"
 	mcf54 "github.com/moov-io/iso8583/mastercard/field54"
+	mcf63 "github.com/moov-io/iso8583/mastercard/field63"
 	"github.com/moov-io/iso8583/specs"
 	"github.com/moov-io/iso8583/visa/field54"
 	"github.com/moov-io/iso8583/visa/field62"
@@ -1686,7 +1687,7 @@ func TestZendaISO_100017(t *testing.T) {
 
 func TestZendaMCISO_601(t *testing.T) {
 	fmt.Println("Welcome to Zenda MC ISO test.")
-	isoFromG := "8PLw8L77RgGI4eYKAAAAAAAAABDw8PDw8PDw8PDw8PDw8PDy8PLw8PDw8PDw8PDy8PLw8PDw8PDw8PDy8PLx8vD58PTx8vH39vHw8PDw8PD28fDw8PDw8Pbw+fT48vLw8fLw8PHy8Pjx8vD58fLw+PX58fLw9fHw8PDw+fj08fL29/fy9/Hw+fDw8PDw8PPw8fHz9PL19vHw+fT48vL09fbx8PDx8PDw8PDw8PDw8vT19vHw5sHTYNTB2eNAe/X28fBAQEBAQEBAQEDiwdVA2cHU1tVAQEBAQEDDwfDx8Nn28fD18PDx8PD49PD49PD49PDw8vDw8PHw+PTwxPDw8PDw8PDw8PLw8vHz8Z8DBgAAAAAAAJ8mCDge3WS/gVxcggIYAJ82AgBSnzQDQgAAnwIGAAAAAAZ2nycBgIQHoAAAAJgIQJ8QBwYBEgOgoACfCQIAjZ8zA+DYyJ8aAghAnx4IU0MwMTAwNjaaAyESCJ81ASKVBYCABIAAXyoCCECfQQMDkICcAQCfNwS31eLu8PL28PDw8PDx8PDw8PXw8fj08Pn09fjzQEBAQEDw8fLU4vD2+PLy8/Py+fPw8vHx9/Xw8PHw8PDw8PDw8PDy9PX28fA="
+	isoFromG := "8PLw8D77RgGI4eIK8PDw8PDw8PDw8PDw8PDx9fbw8PDw8PDw8PDx9fbw8PDw8PDw8PDx9fbw8PPw+PDz9Pj18Pbx8PDw8PDw9vHw8PDw8PDz9fHx8PPy8fT49Pnw8/D38PPw+PDz8Pf1+fHy8PXx8PDw8Pn49PDw9PTy9/Hx8Pnw8PDw8PD18Pbw8/D38vH08fbz9PHz8PD58vjw9vD39/Dw8Pny+EBAQEBAQMPl4mHXyMHZ1EDw8Pny+GBg+PDwQOZA2dbk1cRA2dbD0kBAQEBA4+fw8fDZ9vHw9fHw8PDw+PTw+PTw+PTw8fH2nwIGAAAAABVgnyYIJ2gETcIKhGqCAhgAnzYCAAKfJwGAnxAHBgESA6AgAJUFgIAEgABfKgIIQJoDIgMHnAEAnzcEvZFtmp8JApYAnzQDQgAAhAegAAAAmAhAnx4IODQ3OTA0NTGfMwPg+MifNQEinxoCCEDw8vbw8PDw8PDw8PDw8/Dw+PTw9/j2+PFAQEBAQPDx8tTi8PT48ff3+Pj2+Q=="
 
 	rawISO, err := base64.StdEncoding.DecodeString(isoFromG)
 	if err != nil {
@@ -1730,4 +1731,19 @@ func TestZendaMCISO_601(t *testing.T) {
 	}
 
 	fmt.Println("f54.Amounts: ", f54.Amounts["10"])
+
+	fmt.Println("Let's unpack Field 63 now!")
+	f63bytes, _ := message.GetField(63).Bytes()
+	f63ebcdic, err := encoding.EBCDIC.Encode(f63bytes)
+	if err != nil {
+		fmt.Println("ECBDIC Encode Err: ", err)
+	}
+
+	f63 := mcf63.NewField63(specs.Spec87MCField63)
+	err = f63.Unpack(f63ebcdic)
+	if err != nil {
+		fmt.Println(err)
+	}
+	f63_3_str, _ := f63.GetString(3)
+	fmt.Println("Mastercard Txn ID:", f63_3_str)
 }
